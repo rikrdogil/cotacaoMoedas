@@ -1,0 +1,197 @@
+{% load static %}
+{% load l10n %}
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+
+    <title>Cotação com base no dolar americano</title>
+
+<link href="/static/assets/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
+    <style>
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        user-select: none;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+      }
+      .datepicker {
+    /* top: 32px !important; */
+   
+}
+    </style>
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+
+    <link href="/static/headers.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/10.0.0/highcharts.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/locales/bootstrap-datepicker.pt-BR.min.js"></script>
+  </head>
+  <body>
+    
+
+
+<main>
+ 
+       <header class="p-3 bg-primary bg-gradient text-white">
+        <div class="container-fluid d-grid gap-3 align-items-center" style="grid-template-columns: 1fr 2fr;">
+            <div class="flex-shrink-0 dropdown">
+                <a href="#" class="d-block link-dark text-decoration-none dropdown-toggle" id="dropdownUser2" data-bs-toggle="dropdown" aria-expanded="false">
+                  <img src="/static/assets/brand/dollar.png" alt="mdo" width="32" height="32" class="rounded-circle">
+                </a>
+                <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdownUser2">
+                  <li><a class="dropdown-item" href="/">Página Inicial</a></li>
+                  <li><a class="dropdown-item" href="/?m=all">Todas as moedas ;)</a></li>
+                  <li><a class="dropdown-item" href="/api/v1/rates/" target="blank">Api</a></li>
+                  <li><a class="dropdown-item" href="http://localhost:5566/" target="blank">Flower</a></li>
+                 
+                </ul>
+              </div>
+                  <form class="col-12 col-lg-8 mb-6 mb-lg-0 me-lg-3" method="GET">
+                    <div class="row col-12">
+                    <div class="col">  
+                    <select name=rate id= rate class="form-control " aria-label="" >
+                    
+                       {% for moeda in combo_moedas %}
+                        <option value="{{moeda.sigla}}" >{{moeda.name}}</option>
+                       {% endfor %}
+                      </select>
+                      </div>
+
+                      <div class="col">  
+                        <div class="input-daterange input-group" id="datepicker">
+                            <input type="text" class="input-sm form-control  "  id ="data_inicial" name="data_inicial" placeholder="Data inicial" readonly/>
+                            <span class="input-group-addon"> -- </span>
+                            <input type="text" class="input-sm form-control  " id="data_final" name="data_final" placeholder="Data final" readonly/>
+                        </div>
+                      </div>
+                      <div class="col">
+                        <button type="button" class="btn btn-outline-light me-2" onclick="this.form.submit()">Filtrar</button>
+                                          
+                      </div>
+                    </div>  
+                    
+                  </form>
+          
+                  
+                </div>
+               
+              </div>
+    </header>
+    <div class="b-example-divider"></div>
+ <div class="row col-12 ">
+
+
+  <div id="container2"></div>
+</div>
+
+  </header>
+
+  
+</main>
+
+
+    <script src="static/assets/dist/js/bootstrap.bundle.min.js"></script>
+    {% block script %}
+    <script>
+    
+ 
+    
+
+
+
+
+    
+            Highcharts.chart('container2', {
+                chart: {
+                    zoomType: 'x',
+                  //  height: (9 / 16 * 100) + '%' // 16:9 ratio
+                  height: 400
+                  
+                },
+                title: {
+                    text: ''
+                },
+                // subtitle: {
+                //     text: document.ontouchstart === undefined ?
+                //         'Click and drag in the plot area to zoom in' : 'Pinch the chart to zoom in'
+                // },
+                xAxis: {
+                    type: 'datetime',
+                    categories: {{datas_cotacoes|safe}}
+                },
+                yAxis: {
+                    title: {
+                        text: 'Exchange rate'
+                    }
+                },
+                legend: {
+                    enabled: false
+                },
+                plotOptions: {
+                    area: {
+                        fillColor: {
+                            linearGradient: {
+                                x1: 0,
+                                y1: 0,
+                                x2: 0,
+                                y2: 1
+                            },
+                            stops: [
+                                [0, Highcharts.getOptions().colors[0]],
+                                [1, Highcharts.color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+                            ]
+                        },
+                        marker: {
+                            radius: 2
+                        },
+                        lineWidth: 1,
+                        states: {
+                            hover: {
+                                lineWidth: 1
+                            }
+                        },
+                        threshold: null
+                    }
+                },
+                series: [{{series_moedas|safe}}]
+              
+            });
+  
+
+
+     $(function () {
+    var data_final = $('#data_final').datepicker({language: 'pt-BR',daysOfWeekDisabled:'0,6', format: "yyyy-mm-dd",});
+   // $('#data_final').attr('disabled', 'disabled');
+    var data_inicial = $('#data_inicial').datepicker({
+        daysOfWeekDisabled:'0,6',
+        language: 'pt-BR',
+        format: "yyyy-mm-dd",
+    }).on('changeDate', function(event) {
+        //$('#data_final').removeAttr('disabled');
+        var newDate = new Date(event.date)
+        newDate.setDate(newDate.getDate() + 6)
+        data_final.datepicker("setStartDate", event.date);
+        data_final.datepicker("setEndDate", newDate);
+        data_inicial.datepicker('hide');
+        $('#data_final')[0].focus();
+    });
+});
+
+          </script>
+    
+          
+           {% endblock script %}
+      
+  </body>
+</html>

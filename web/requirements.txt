@@ -1,0 +1,9 @@
+Django==4.0.3
+gunicorn==20.1.0
+psycopg2
+requests==2.27.1
+celery==5.1.2
+redis==3.5.3
+flower==1.0.0
+djangorestframework==3.13.1
+bizdays==1.0.2

@@ -1,0 +1,109 @@
+
+
+services:
+  web:
+    build: ./web
+    expose:
+      - 8000
+    ports:
+      - 8000:8000
+    links:
+      - redis:redis
+    volumes:
+      - web-django:/usr/src/app
+     
+      - /static:/static
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=9e7ed9e0066a2af5970bfca444eab3526a627222e2738df860a10940dca32105
+      - DB_NAME=cotacao
+      - DB_USER=cotacao_user
+      - DB_PASS=cotacao_pass
+      - DB_SERVICE=postgres
+      - DB_PORT=5432
+     
+
+    command: /usr/local/bin/gunicorn cotacao.wsgi:application -w 2 -b :8000
+    depends_on:
+      - postgres
+  nginx:
+    build: ./nginx/
+    ports:
+      - 80:80
+    volumes:
+     
+      - /static:/static
+    links:
+      - web:web
+
+  postgres:
+    image: postgres:13
+    expose:
+      - 5432
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_USER=cotacao_user
+      - POSTGRES_PASSWORD=cotacao_pass
+      - POSTGRES_DB=cotacao
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
+
+  redis:
+    image: redis:6.2-alpine
+
+  celery:
+    build: ./web
+    command: celery -A cotacao worker  -l info
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=9e7ed9e0066a2af5970bfca444eab3526a627222e2738df860a10940dca32105
+      - CELERY_BROKER=redis://redis:6379/0
+      - CELERY_BACKEND=redis://redis:6379/0
+      - DB_NAME=cotacao
+      - DB_USER=cotacao_user
+      - DB_PASS=cotacao_pass
+      - DB_SERVICE=postgres
+      - DB_PORT=5432
+    volumes:
+      - web-django:/usr/src/app    
+    depends_on:
+      - redis
+      - web
+      - postgres
+
+  celery-beat:
+    build: ./web
+    command: celery -A cotacao beat -l info
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=9e7ed9e0066a2af5970bfca444eab3526a627222e2738df860a10940dca32105
+      - CELERY_BROKER=redis://redis:6379/0
+      - CELERY_BACKEND=redis://redis:6379/0
+      - DB_NAME=cotacao
+      - DB_USER=cotacao_user
+      - DB_PASS=cotacao_pass
+      - DB_SERVICE=postgres
+      - DB_PORT=5432
+    volumes:
+      - web-django:/usr/src/app
+    depends_on:
+      - redis
+      - web
+      - postgres
+
+
+  dashboard:
+    build: ./web
+    command: celery -A cotacao flower --port=5566 
+    ports:
+      - 5566:5566
+    depends_on:
+      - redis
+     
+  
+volumes:
+  web-django:
+  web-static:
+  pgdata:
+
